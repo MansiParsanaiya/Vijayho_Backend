@@ -1,5 +1,3 @@
-// branchController.js
-
 const Branch = require('../models/Branch'); 
 
 const branchController = {
