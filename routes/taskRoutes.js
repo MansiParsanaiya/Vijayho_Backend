@@ -9,6 +9,7 @@ router.put('/updateTaskById/:id',taskController.updateTaskById);
 router.delete('/deleteTaskById/:id',taskController.deleteTaskById);
 router.get('/getTasksByUser/:id/:user',taskController.getTasksByUser);
 router.patch('/updateProjectDetailsInTasks/:projectId',taskController.updateProjectDetailsInTasks),
+
 router.get('/getTasksByUserAndTime/:user',taskController.getTasksByUserAndTime),
 router.get('/getAllTask',taskController.getAllTask),
 router.patch('/patchUpdateTaskById/:id',taskController.patchUpdateTaskById),

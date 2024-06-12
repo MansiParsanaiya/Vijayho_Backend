@@ -167,6 +167,67 @@ module.exports.updateProjectDetailsInTasks = async (req, res) => {
     }
 };
 
+
+exports.getTaskDueNotify = async (req, res) => {
+    const { email } = req.params;
+    try {
+        // Check if email exists in records
+        const employeeExists = await Task.exists({ taskAssignees: email });
+        if (!employeeExists) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
+
+        // Get tasks due tomorrow for the specified email
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tasks = await Task.find({
+            taskAssignees: email,
+            dueDate: {
+                $gte: new Date(),
+                $lt: tomorrow
+            },
+            status: { $ne: 'Completed' }
+        });
+
+        // Prepare task details
+        const taskDetails = tasks.map(task => ({
+            id: task._id,
+            projectId: task.projectId,
+            projectName: task.projectName,
+            taskDescription: task.taskDescription,
+            taskAssignees: task.taskAssignees,
+            status: task.status,
+            dueDate: task.dueDate
+        }));
+        //         projectId
+        // projectName
+        // taskDescription
+        // taskAssignees
+        // dueDate
+        // projectStartDate
+        // projectDueDate
+        // status
+
+        if (taskDetails) {
+            // Send email to employee
+            // await sendMail({
+            //     to: email,
+            //     subject: 'Task Reminder',
+            //     html: `Hi ${email},<br><br>Here are the tasks you have due today:<br><br>${taskDetails.map(task => `<li>${task.projectName} - ${task.taskDescription}</li>`).join('')}`
+            // });
+            return res.status(200).json({ tasks: taskDetails });
+        }
+        else {
+            return res.status(200).json({ tasks: [] });
+        }
+        // Return task details as JSON
+    } catch (error) {
+        console.error('Error sending notifications:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
 module.exports.getTasksByUserAndTime = async (req, res) => {
     const { user } = req.params;
 
@@ -188,6 +249,8 @@ module.exports.getTasksByUserAndTime = async (req, res) => {
         res.status(500).json({ success: false, error: 'Internal server error' });
     }
 };
+
+
 
 module.exports.getAllTask = async (req, res) => {
     const { page, limit, search, projectName, status } = req.query;
@@ -215,9 +278,11 @@ module.exports.getAllTask = async (req, res) => {
             query.status = status
         }
 
-        const tasks = await Task.paginate(query, { page: parseInt(page), limit: parseInt(limit), sort: { 
-            status: 'desc', dueDate: 'asc'
-        }  });
+        const tasks = await Task.paginate(query, {
+            page: parseInt(page), limit: parseInt(limit), sort: {
+                status: 'desc', dueDate: 'asc'
+            }
+        });
 
         console.log(tasks, "sdnjndsnndsncsdn")
 

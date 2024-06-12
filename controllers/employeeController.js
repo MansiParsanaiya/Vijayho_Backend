@@ -16,6 +16,45 @@ module.exports.addEmployee = async (req, res) => {
     }
 }
 
+module.exports.getAllEmployees = async (req, res) => {
+    try {
+        const { page, limit, search } = req.query;
+
+        const query = {};
+        const options = {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || 10,
+        };
+
+        console.log(search, "i'm calling from getAPI search value");
+
+        if (search !== undefined && search !== null && search !== "") {
+            if (!isNaN(search)) {
+                query.$or = [
+                    { pincode: parseInt(search) },
+                    { contactNo: parseInt(search) },
+                    { employeeID: search },
+                ];
+            } else {
+                query.$or = [
+                    { firstName: { $regex: new RegExp(search, 'i') } },
+                    { lastName: { $regex: new RegExp(search, 'i') } },
+                    { email: { $regex: new RegExp(search, 'i') } },
+                    { country: { $regex: new RegExp(search, 'i') } },
+                    { state: { $regex: new RegExp(search, 'i') } },
+                    { city: { $regex: new RegExp(search, 'i') } },
+                ];
+            }
+        }
+
+        const employees = await Employee.paginate(query, options);
+        res.status(200).json(employees);
+    } catch (error) {
+        console.error('Error fetching employees:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 module.exports.updateEmployee = async (req, res) => {
     try {
         const updatedEmployee = await Employee.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
